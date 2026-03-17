@@ -1,0 +1,15 @@
+# config.txt Beispiel
+# MQTT_INTEGRATION auf 0 bedeutet kein WLAN und keine Integration in MQTT
+
+# WLAN Einstellungen
+WIFI_SSID=
+WIFI_PASS=
+
+# MQTT Einstellungen
+MQTT_SERVER=
+MQTT_PORT=1883
+MQTT_USER=
+MQTT_PASS=
+MQTT_CLIENT_ID=esp32_zwitscherbox_04
+MQTT_BASE_TOPIC=zwitscher04
+MQTT_INTEGRATION=1
