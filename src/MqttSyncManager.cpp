@@ -1,9 +1,6 @@
 #include "MqttSyncManager.h"
 
 #include "PlaybackManager.h"
-#include "config.h"
-
-#include <string.h>
 
 static MqttSyncManager* g_mqttSync = nullptr;
 
@@ -13,8 +10,8 @@ static void mqtt_message_callback(char* topic, uint8_t* payload, unsigned int le
     }
 }
 
-MqttSyncManager::MqttSyncManager(PlaybackManager* player)
-    : _player(player), _mqtt(_wifi) {
+MqttSyncManager::MqttSyncManager(PlaybackManager* player, ZwitscherboxConfig* cfg)
+    : _player(player), _cfg(cfg), _mqtt(_wifi) {
     g_mqttSync = this;
 }
 
@@ -30,22 +27,23 @@ void MqttSyncManager::begin() {
     if (mac.length() > 6) {
         mac = mac.substring(mac.length() - 6);
     }
-    _selfId = String(MQTT_CLIENT_ID_BASE) + "_" + mac;
+    _selfId = _cfg->mqttClientIdBase + "_" + mac;
 
     _mqtt.setCallback(mqtt_message_callback);
-    _mqtt.setServer(MQTT_SERVER, MQTT_PORT);
+    _mqtt.setServer(_cfg->mqttServer.c_str(), _cfg->mqttPort);
 
     ensureMqttConnected();
 }
 
 void MqttSyncManager::ensureWifi() {
-    if (strlen(WIFI_SSID) == 0) {
+    if (!_cfg) return;
+    if (_cfg->wifiSsid.length() == 0) {
         Serial.println("MQTT_INTEGRATION aktiv, aber WIFI_SSID ist leer. MQTT wird nicht verbinden.");
         return;
     }
     WiFi.mode(WIFI_STA);
     WiFi.setSleep(false);
-    WiFi.begin(WIFI_SSID, WIFI_PASS);
+    WiFi.begin(_cfg->wifiSsid.c_str(), _cfg->wifiPass.c_str());
 
     const unsigned long start = millis();
     while (WiFi.status() != WL_CONNECTED && (millis() - start) < 20000UL) {
@@ -75,15 +73,17 @@ void MqttSyncManager::ensureMqttConnected() {
     }
 
     bool ok = false;
-    if (strlen(MQTT_USER) > 0) {
-        ok = _mqtt.connect(_selfId.c_str(), MQTT_USER, MQTT_PASS);
+    if (_cfg && _cfg->mqttUser.length() > 0) {
+        ok = _mqtt.connect(_selfId.c_str(), _cfg->mqttUser.c_str(), _cfg->mqttPass.c_str());
     } else {
         ok = _mqtt.connect(_selfId.c_str());
     }
 
     if (ok) {
         Serial.println("MQTT connected.");
-        _mqtt.subscribe(MQTT_SHARED_PLAY_TOPIC);
+        if (_cfg) {
+            _mqtt.subscribe(_cfg->mqttSharedPlayTopic.c_str());
+        }
     } else {
         Serial.print("MQTT connect failed, state=");
         Serial.println(_mqtt.state());
@@ -114,7 +114,10 @@ void MqttSyncManager::notifyLocalPlay(const String& dirPath, const String& fileN
 void MqttSyncManager::publishPlayMessage(const String& dirPath, const String& fileName) {
     // Payload: <senderId>|<dirPath>|<fileName>
     String payload = _selfId + "|" + dirPath + "|" + fileName;
-    bool ok = _mqtt.publish(MQTT_SHARED_PLAY_TOPIC, payload.c_str());
+    bool ok = false;
+    if (_cfg) {
+        ok = _mqtt.publish(_cfg->mqttSharedPlayTopic.c_str(), payload.c_str());
+    }
     if (ok) {
         Serial.print("MQTT publish play: ");
         Serial.println(payload);

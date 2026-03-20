@@ -18,28 +18,3 @@
 // --- Andere Einstellungen ---
 #define DEBOUNCE_DELAY_MS   50
 #define POT_READ_INTERVAL_MS 100
-
-// --- Netzwerk / MQTT Sync ---
-// Hinweis: Wenn MQTT_INTEGRATION = 1, wird Deep Sleep in main.cpp deaktiviert,
-// damit die Box weiterhin Nachrichten empfangen kann.
-#define MQTT_INTEGRATION 1
-
-// Öffentliche Broker Beispiel: "test.mosquitto.org"
-#define MQTT_SERVER       "test.mosquitto.org"
-#define MQTT_PORT         1883
-
-// Für öffentliche Broker oft leer (keine Auth erforderlich).
-#define MQTT_USER         ""
-#define MQTT_PASS         ""
-
-// Wird zur Erstellung einer eindeutigen Client-ID verwendet.
-#define MQTT_CLIENT_ID_BASE "esp32_zwitscherbox"
-
-// Gemeinsames Topic (Gruppen-Topic), auf dem alle Boxen Play-Events
-// veröffentlichen/abhören. Gruppenname: "loveables"
-#define MQTT_SHARED_PLAY_TOPIC "zwitscherbox/group/loveables/play"
-
-// WLAN-Zugangsdaten (je Box identisch, wenn gleicher AP).
-// Wenn leer, kann MQTT nicht verbinden.
-#define WIFI_SSID ""
-#define WIFI_PASS ""

@@ -67,11 +67,15 @@ Hinweis: Öffentliche Broker sind nicht garantiert verfügbar/zuverlässig. Für
 
 ### Konfiguration
 
-Die WLAN- und MQTT-Werte werden derzeit in `src/config.h` gesetzt:
+Die WLAN- und MQTT-Werte werden aus `/config.txt` auf der SD-Karte gelesen (key=value, Kommentare mit `#`).
+
+Relevante Schlüssel sind:
 
 - `WIFI_SSID` / `WIFI_PASS`
 - `MQTT_SERVER` / `MQTT_PORT` / `MQTT_USER` / `MQTT_PASS`
 - `MQTT_INTEGRATION` (für echtes Sync: `1`, damit die Box nicht in Deep Sleep geht)
+- `MQTT_CLIENT_ID_BASE`
+- `MQTT_SHARED_PLAY_TOPIC`
 
 Damit es funktioniert, müssen alle Boxen dieselbe Gruppe / dasselbe Topic verwenden und denselben Broker erreichen können.
 

@@ -1,15 +1,20 @@
-# config.txt Beispiel
-# MQTT_INTEGRATION auf 0 bedeutet kein WLAN und keine Integration in MQTT
+# config.txt Beispiel (auf die SD-Karte kopieren: /config.txt)
 
 # WLAN Einstellungen
 WIFI_SSID=
 WIFI_PASS=
 
-# MQTT Einstellungen
-MQTT_SERVER=
+# MQTT Sync
+# MQTT_INTEGRATION auf 1 aktiviert MQTT Sync und hält die Box wach (kein Deep Sleep).
+MQTT_INTEGRATION=1
+
+MQTT_SERVER=test.mosquitto.org
 MQTT_PORT=1883
 MQTT_USER=
 MQTT_PASS=
-MQTT_CLIENT_ID=esp32_zwitscherbox_04
-MQTT_BASE_TOPIC=zwitscher04
-MQTT_INTEGRATION=1
+
+# Wird genutzt, um eine eindeutige MQTT-Client-ID pro Box zu erzeugen.
+MQTT_CLIENT_ID_BASE=esp32_zwitscherbox
+
+# Gemeinsames Gruppen-Topic für alle Boxen (loveables)
+MQTT_SHARED_PLAY_TOPIC=zwitscherbox/group/loveables/play

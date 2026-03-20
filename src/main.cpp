@@ -3,12 +3,14 @@
 #include "PlaybackManager.h"
 #include "StateManager.h"
 #include "MqttSyncManager.h"
+#include "SdConfig.h"
 
 // Erstelle die globalen Objekte
 HardwareManager hardware(POT_PIN, PIR_PIN, BUTTON_PIN);
 PlaybackManager player;
 StateManager    stateMgr;
-MqttSyncManager mqttSync(&player);
+SdConfigManager sdConfig;
+MqttSyncManager mqttSync(&player, &sdConfig.getMutable());
 
 // Globale Zustandsvariablen für die Hauptlogik
 unsigned long lastActivityTime = 0;
@@ -26,6 +28,9 @@ void setup() {
         Serial.println("SD Card Mount Failed!");
         while(1);
     }
+
+    // Lädt WLAN/MQTT Einstellungen aus "/config.txt" von der SD-Karte
+    sdConfig.load("/config.txt");
     
     // Initialisiere die Manager
     hardware.begin();
@@ -96,15 +101,13 @@ void loop() {
         inPlaybackSession = false;
     }
     
-#if MQTT_INTEGRATION
-    // Wenn MQTT Sync aktiv ist, soll die Box wach bleiben, damit andere sie auslösen können.
-#else
-    // 3. Deep Sleep prüfen (nur wenn nichts passiert)
-    if (!isPlaying && !inPlaybackSession) {
-        stateMgr.saveState(player.getCurrentDirectoryIndex(), hardware.getVolume());
-        stateMgr.checkAndEnterDeepSleep(lastActivityTime, PIR_PIN);
+    // 3. Deep Sleep prüfen (nur wenn nichts passiert und MQTT nicht aktiv ist)
+    if (!sdConfig.get().mqttIntegration) {
+        if (!isPlaying && !inPlaybackSession) {
+            stateMgr.saveState(player.getCurrentDirectoryIndex(), hardware.getVolume());
+            stateMgr.checkAndEnterDeepSleep(lastActivityTime, PIR_PIN);
+        }
     }
-#endif
     
     vTaskDelay(10); // Kurze Pause für den Task Scheduler
 }

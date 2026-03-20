@@ -4,13 +4,13 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 
-#include "config.h"
+#include "SdConfig.h"
 
 class PlaybackManager;
 
 class MqttSyncManager {
 public:
-    explicit MqttSyncManager(PlaybackManager* player);
+    explicit MqttSyncManager(PlaybackManager* player, ZwitscherboxConfig* cfg);
 
     void begin();
     void update();
@@ -18,7 +18,7 @@ public:
     // Wird vom Player ausgelöst, wenn lokal erfolgreich eine MP3 gestartet wurde.
     void notifyLocalPlay(const String& dirPath, const String& fileName);
 
-    bool isEnabled() const { return MQTT_INTEGRATION != 0; }
+    bool isEnabled() const { return _cfg && _cfg->mqttIntegration; }
 
 private:
     void ensureWifi();
@@ -27,6 +27,7 @@ private:
     void publishPlayMessage(const String& dirPath, const String& fileName);
 
     PlaybackManager* _player = nullptr;
+    ZwitscherboxConfig* _cfg = nullptr;
 
     // Network
     WiFiClient _wifi;
