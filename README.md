@@ -12,6 +12,7 @@ Ein modularer, ESP32-basierter MP3-Player, der primär für das Abspielen von Na
 - **Energiesparend:** Automatischer Wechsel in den **Deep Sleep** nach Inaktivität, um Batterielaufzeit zu maximieren.
 - **Zustandsspeicherung:** Merkt sich den zuletzt gewählten Ordner und die Lautstärke über Neustarts hinweg (NVS).
 - **Timeout-Schutz:** Maximale Wiedergabedauer pro Auslösung einstellbar.
+- **MQTT Sync (Gruppenmodus):** Wenn eine Box eine MP3 startet, können andere Boxen derselben Gruppe exakt dieselbe MP3 abspielen.
 
 ## Hardware-Anforderungen
 
@@ -44,6 +45,35 @@ Wichtige Bibliotheken:
 - **ESP32-audioI2S:** Für die hochwertige Audiowiedergabe über I2S.
 - **Preferences:** Zur dauerhaften Speicherung von Einstellungen.
 - **SD:** Zugriff auf das Dateisystem der Speicherkarte.
+
+## MQTT Gruppen-Synchronisation (Loveables)
+
+Optional können mehrere Zwitscherboxen über einen MQTT-Broker synchronisiert werden (analog zur “Friendship Lamp” Idee):
+
+- Eine Box publiziert beim lokalen MP3-Start ein “Play”-Event.
+- Alle Boxen, die dasselbe MQTT-Topic abonnieren, empfangen das Event und spielen dann dieselbe MP3-Datei.
+
+### Topic / Broker
+
+Für die Gruppe `loveables` ist das Topic standardmäßig:
+
+- `zwitscherbox/group/loveables/play`
+
+Ein Beispiel für einen öffentlichen Broker ist:
+
+- `test.mosquitto.org:1883`
+
+Hinweis: Öffentliche Broker sind nicht garantiert verfügbar/zuverlässig. Für Dauerbetrieb ist ein eigener Broker besser.
+
+### Konfiguration
+
+Die WLAN- und MQTT-Werte werden derzeit in `src/config.h` gesetzt:
+
+- `WIFI_SSID` / `WIFI_PASS`
+- `MQTT_SERVER` / `MQTT_PORT` / `MQTT_USER` / `MQTT_PASS`
+- `MQTT_INTEGRATION` (für echtes Sync: `1`, damit die Box nicht in Deep Sleep geht)
+
+Damit es funktioniert, müssen alle Boxen dieselbe Gruppe / dasselbe Topic verwenden und denselben Broker erreichen können.
 
 ## Installation
 
