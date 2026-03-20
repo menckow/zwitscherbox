@@ -2,11 +2,13 @@
 #include "HardwareManager.h"
 #include "PlaybackManager.h"
 #include "StateManager.h"
+#include "MqttSyncManager.h"
 
 // Erstelle die globalen Objekte
 HardwareManager hardware(POT_PIN, PIR_PIN, BUTTON_PIN);
 PlaybackManager player;
 StateManager    stateMgr;
+MqttSyncManager mqttSync(&player);
 
 // Globale Zustandsvariablen für die Hauptlogik
 unsigned long lastActivityTime = 0;
@@ -28,6 +30,7 @@ void setup() {
     // Initialisiere die Manager
     hardware.begin();
     player.begin(I2S_BCLK_PIN, I2S_LRCLK_PIN, I2S_DOUT_PIN);
+    player.setMqttSync(&mqttSync);
     stateMgr.begin();
 
     // Lade den letzten Zustand
@@ -42,12 +45,15 @@ void setup() {
     
     lastActivityTime = millis();
     Serial.println("Setup complete. Waiting for activity.");
+
+    mqttSync.begin();
 }
 
 void loop() {
     // 1. Alle Manager-Objekte updaten
     hardware.update();
     player.update();
+    mqttSync.update();
 
     // 2. Status abfragen und Logik ausführen
     bool isPirActive = hardware.isPirActive();
@@ -90,11 +96,15 @@ void loop() {
         inPlaybackSession = false;
     }
     
+#if MQTT_INTEGRATION
+    // Wenn MQTT Sync aktiv ist, soll die Box wach bleiben, damit andere sie auslösen können.
+#else
     // 3. Deep Sleep prüfen (nur wenn nichts passiert)
     if (!isPlaying && !inPlaybackSession) {
         stateMgr.saveState(player.getCurrentDirectoryIndex(), hardware.getVolume());
         stateMgr.checkAndEnterDeepSleep(lastActivityTime, PIR_PIN);
     }
+#endif
     
     vTaskDelay(10); // Kurze Pause für den Task Scheduler
 }
